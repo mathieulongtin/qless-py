@@ -23,12 +23,15 @@ except ImportError:
         pass
 
 class Worker(object):
-    def __init__(self, queues, host='localhost', workers=None, interval=60, workdir='.', resume=False, **kwargs):
-        _host, s, _port = host.partition(':')
-        _port           = int(_port or 6379)
-        self.host       = _host
-        self.port       = _port
-        self.client     = qless.client(self.host, self.port)
+    def __init__(self, queues, host='localhost', workers=None, interval=60, workdir='.', resume=False, stop_on_idle=False, **kwargs):
+        if host.startswith('redis://'):
+            self.host       = host
+        else:
+            _split_host = host.split(':')
+            host = _split_host[0]
+            port = int(_split_host[1] or 6379)
+            self.host = 'redis://%s:%d' % (host, port)
+        self.client     = qless.client(url=self.host)
         self.count      = workers or psutil.NUM_CPUS
         self.interval   = interval
         self.queues     = queues
@@ -136,7 +139,7 @@ class Worker(object):
     
     def work(self):
         # We should probably open up our own redis client
-        self.client = qless.client(self.host, self.port)
+        self.client = qless.client(url=self.host)
         self.queues = [self.client.queues[q] for q in self.queues]
         
         if not os.path.isdir(self.sandbox):

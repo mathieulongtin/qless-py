@@ -150,14 +150,17 @@ class Events(object):
 
 class client(object):
     '''Basic qless client object.'''
-    def __init__(self, host='localhost', port=6379, hostname=None, **kwargs):
+    def __init__(self, host='localhost', port=6379, hostname=None, url=None, **kwargs):
         import socket
         # This is our unique idenitifier as a worker
         self.worker_name = hostname or socket.gethostname()
         # This is just the redis instance we're connected to
         # conceivably someone might want to work with multiple
         # instances simultaneously.
-        self.redis   = redis.Redis(host, port, **kwargs)
+        if url and url.startswith('redis://'):
+            self.redis   = redis.Redis.from_url(url)
+        else:
+            self.redis   = redis.Redis(host, port, **kwargs)
         self.config  = Config(self)
         self.jobs    = Jobs(self)
         self.workers = Workers(self)

@@ -56,7 +56,7 @@ def limit_cpu(limit):
 parser = argparse.ArgumentParser(description='Run qless workers.')
 
 parser.add_argument('--host', dest='host', default='localhost',
-    help='The host:port to connect to as the Redis server')
+    help='Either host:port or URL format (redis://user:pass@host:port/db) to connect to as the Redis server')
 parser.add_argument('-w', '--workers', default=psutil.NUM_CPUS, type=int,
     help='How many processes to run. Set to 0 to use all available cores')
 parser.add_argument('-g', '--greenlets', default=0, type=int,
