@@ -5,14 +5,15 @@ import redis
 import logging
 import simplejson as json
 
-logger = logging.getLogger('qless')
-formatter = logging.Formatter(
-    '%(asctime)s | PID %(process)d | [%(levelname)s] %(message)s')
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.FATAL)
+if 'logger' not in locals():
+    logger = logging.getLogger('qless')
+    formatter = logging.Formatter(
+        '%(asctime)s | PID %(process)d | [%(levelname)s] %(message)s')
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.FATAL)
 
 # A decorator to specify a bunch of exceptions that should be caught
 # and the job retried. It turns out this comes up with relative frequency
