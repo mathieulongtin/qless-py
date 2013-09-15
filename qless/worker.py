@@ -23,9 +23,11 @@ class Worker(object):
         'worker_id': 0,
         'sandbox': '/dev/null'
     }
+    IDLE_EXIT_STATUS = 231
+
 
     def __init__(self, queues, host=None, workers=None, interval=60,
-        workdir='.', resume=False):
+        workdir='.', resume=False, stop_on_idle=False):
         host = host or 'localhost'
         if host.startswith('redis://'):
             self.host = host
@@ -38,6 +40,7 @@ class Worker(object):
         self.queues = queues
         self.resume = resume
         self.interval = interval
+        self.stop_on_idle = stop_on_idle
         self.sandboxes = {}
         # This is for filesystem sandboxing. Each worker has
         # a directory associated with it, which it should make
@@ -97,8 +100,13 @@ class Worker(object):
         while self.master:
             try:
                 pid, status = os.wait()
-                logger.warn('Worker %i died with status %i from signal %i' % (pid, status >> 8, status & 0xff))
                 slot = self.sandboxes.pop(pid)
+
+                if self.stop_on_idle and (status >> 8) == self.IDLE_EXIT_STATUS:
+                    logger.info('Worker %i stopped because it was idle; stopping all workers' % (pid,))
+                    break
+                logger.warn('Worker %i died with status %i from signal %i' % (pid, status >> 8, status & 0xff))
+
                 cpid = os.fork()
                 if cpid:
                     logger.info('Spawned replacement worker %i' % cpid)
@@ -164,20 +172,28 @@ class Worker(object):
             except KeyboardInterrupt:
                 return
 
+        sleep_cycles = 0
         while True:
             try:
-                seen = False
                 for queue in self.queues:
                     job = queue.pop()
                     if job:
-                        seen = True
+                        sleep_cycles = -1
                         self.title('Working %s (%s)' % (job.jid, job.klass_name))
                         job.process()
                         self.clean()
-                if not seen:
+
+                if self.stop_on_idle and sleep_cycles >= 2:
+                    logger.info("Idle for too long, quiting")
+                    import sys
+                    sys.exit(self.IDLE_EXIT_STATUS)
+                if sleep_cycles >= 0:
                     self.title('sleeping...')
                     logger.debug('Sleeping for %fs' % self.interval)
                     time.sleep(self.interval)
+                    sleep_cycles += 1
+                else:
+                    sleep_cycles = 0
             except KeyboardInterrupt:
                 return
 
