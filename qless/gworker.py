@@ -49,7 +49,7 @@ class Worker(worker.Worker):
 
     def work(self):
         # We should probably open up our own redis client
-        self.client = qless.client(self.host, self.port)
+        self.client = qless.client(url=self.host)
         self.queues = [self.client.queues[q] for q in self.queues]
 
         if not os.path.isdir(self.sandbox):
