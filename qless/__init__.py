@@ -9,15 +9,15 @@ import simplejson as json
 # Internal imports
 from .exceptions import QlessException
 
-
-logger = logging.getLogger('qless')
-formatter = logging.Formatter(
-    '%(asctime)s | PID %(process)d | [%(levelname)s] %(message)s')
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.FATAL)
+if 'logger' not in locals():
+    logger = logging.getLogger('qless')
+    formatter = logging.Formatter(
+        '%(asctime)s | PID %(process)d | [%(levelname)s] %(message)s')
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.FATAL)
 
 
 def retry(*excepts):
