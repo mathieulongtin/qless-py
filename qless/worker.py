@@ -27,12 +27,14 @@ class Worker(object):
     def __init__(self, queues, host=None, workers=None, interval=60,
         workdir='.', resume=False):
         host = host or 'localhost'
-        _host, _, _port = host.partition(':')
-        _port = int(_port or 6379)
-        self.host = _host
-        self.port = _port
+        if host.startswith('redis://'):
+            self.host = host
+        else:
+            _host,_,_port = host.partition(':')
+            port = int(_port or 6379)
+            self.host = 'redis://%s:%d' % (_host, _port)
+        self.client = qless.client(url=self.host)
         self.count = workers or psutil.NUM_CPUS
-        self.client = qless.client(self.host, self.port)
         self.queues = queues
         self.resume = resume
         self.interval = interval
