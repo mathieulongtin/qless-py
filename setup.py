@@ -24,7 +24,7 @@ stats, notifications, and a whole lot more.
         'ps': ['setproctitle']
     },
     install_requires     = [
-        'argparse', 'hiredis', 'redis', 'psutil', 'simplejson'],
+        'argparse', 'redis', 'psutil', 'simplejson'],
     classifiers          = [
         'License :: OSI Approved :: MIT License',
     	'Programming Language :: Python',
